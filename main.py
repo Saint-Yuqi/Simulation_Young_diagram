@@ -57,6 +57,7 @@ def add_box(young_diagram):
 
 def generate_young_diagram(n):
     # Generate a Young diagram with n boxes
+
     young_diagram = [1]
     for _ in range(n - 1):
         young_diagram = add_box(young_diagram)
