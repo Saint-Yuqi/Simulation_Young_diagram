@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
+import matplotlib.cm as cm
 import random
 
 
@@ -30,7 +31,7 @@ def draw_young_diagram_gray_level(partition, box_counts = {}, n = 1):
     diagram = [[0 for j in range(partition[i])] for i in range(len(partition))]
 
     # Create a plot with matplotlib
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(10, 10))
 
     # Add rectangles for each box in the Young diagram
     for i in range(len(diagram)):
@@ -40,10 +41,9 @@ def draw_young_diagram_gray_level(partition, box_counts = {}, n = 1):
                 freq = box_counts[key]
                 gray_level = 1 - freq / n
                 color = (gray_level, gray_level, gray_level)
-                ax.add_patch(plt.Rectangle((j, i), 1, 1, fill=True, facecolor=color, edgecolor='white'))
+                ax.add_patch(plt.Rectangle((j, i), 1, 1, fill=True, facecolor=color, edgecolor='white',  linewidth=0.5))
             else:
-                ax.add_patch(plt.Rectangle((j, i), 1, 1, fill=False, edgecolor='black'))
-        # ax.text(j + 0.5, len(diagram) - i - 0.5, str(diagram[i][j]), ha='center', va='center')
+                ax.add_patch(plt.Rectangle((j, i), 1, 1, fill=False, edgecolor='black',  linewidth=0.5))
 
     # Set the x and y limits of the plot
     ax.set_xlim([0, len(diagram[0]) + 10])
@@ -52,9 +52,124 @@ def draw_young_diagram_gray_level(partition, box_counts = {}, n = 1):
     # Set the aspect ratio of the plot to be equal
     ax.set_aspect('equal')
 
+    # Remove axis labels and ticks
+    ax.set_xticks([])
+    ax.set_yticks([])
+
     # Show the plot
     plt.show()
+def draw_young_diagram_grays_level(partition, box_counts={}, n=1):
+    diagram = [[0 for j in range(partition[i])] for i in range(len(partition))]
 
+    # Increase the figure size
+    fig, ax = plt.subplots(figsize=(10, 10))
+
+    if box_counts:
+        max_freq = max(box_counts.values())
+    else:
+        max_freq = 1
+
+    normalized_box_counts = {key: value / max_freq for key, value in box_counts.items()}
+
+    cmap = cm.get_cmap('gray')
+    colormap = colors.LinearSegmentedColormap.from_list("custom_colormap",
+                                                        [cmap(0), cmap(0.4), cmap(0.6), cmap(1)])
+
+    for i in range(len(diagram)):
+        for j in range(len(diagram[i])):
+            key = (j, i)
+            if key in normalized_box_counts:
+                freq = normalized_box_counts[key]
+                color = colormap(freq)
+
+                # Reduce the box edge width
+                ax.add_patch(plt.Rectangle((j, i), 1, 1, fill=True, facecolor=color, edgecolor='black', linewidth=0.5))
+            else:
+                ax.add_patch(plt.Rectangle((j, i), 1, 1, fill=False, edgecolor='black', linewidth=0.5))
+
+    ax.set_xlim([0, len(diagram[0]) + 10])
+    ax.set_ylim([0, len(diagram) + 10])
+    ax.set_aspect('equal')
+
+    # Remove axis labels and ticks
+    ax.set_xticks([])
+    ax.set_yticks([])
+
+    plt.show()
+def draw_young_diagram_green_level(partition, box_counts={}, n=1):
+    diagram = [[0 for j in range(partition[i])] for i in range(len(partition))]
+    fig, ax = plt.subplots(figsize=(10, 10))
+
+    if box_counts:
+        max_freq = max(box_counts.values())
+    else:
+        max_freq = 1
+
+    normalized_box_counts = {key: value / max_freq for key, value in box_counts.items()}
+
+    # Create a custom green colormap
+    cmap = cm.get_cmap('Greens')
+    colormap = colors.LinearSegmentedColormap.from_list("custom_colormap",
+                                                        [cmap(0), cmap(0.4), cmap(0.6), cmap(1)])
+
+    for i in range(len(diagram)):
+        for j in range(len(diagram[i])):
+            key = (j, i)
+            if key in normalized_box_counts:
+                freq = normalized_box_counts[key]
+                color = colormap(freq)
+
+                # Reduce the box edge width
+                ax.add_patch(plt.Rectangle((j, i), 1, 1, fill=True, facecolor=color, edgecolor='black', linewidth=0.5))
+            else:
+                ax.add_patch(plt.Rectangle((j, i), 1, 1, fill=False, edgecolor='black', linewidth=0.5))
+
+    ax.set_xlim([0, len(diagram[0]) + 10])
+    ax.set_ylim([0, len(diagram) + 10])
+    ax.set_aspect('equal')
+
+    # Remove axis labels and ticks
+    ax.set_xticks([])
+    ax.set_yticks([])
+
+    plt.show()
+def draw_young_diagram_greens_level(partition, box_counts={}, n=1):
+    diagram = [[0 for j in range(partition[i])] for i in range(len(partition))]
+    fig, ax = plt.subplots(figsize=(10, 10))
+
+    if box_counts:
+        max_freq = max(box_counts.values())
+        min_freq = min(box_counts.values())
+    else:
+        max_freq = 1
+        min_freq = 0
+
+    # Normalize the frequencies using the range of frequencies
+    normalized_box_counts = {key: (value - min_freq) / (max_freq - min_freq) for key, value in box_counts.items()}
+
+    # Create a custom inverted green colormap
+    cmap = cm.get_cmap('Greens_r')
+    colormap = colors.LinearSegmentedColormap.from_list("custom_colormap",
+                                                        [cmap(0), cmap(0.4), cmap(0.6), cmap(1)])
+
+    for i in range(len(diagram)):
+        for j in range(len(diagram[i])):
+            key = (j, i)
+            if key in normalized_box_counts:
+                freq = normalized_box_counts[key]
+                color = colormap(freq)
+                ax.add_patch(plt.Rectangle((j, i), 1, 1, fill=True, facecolor=color, edgecolor='white', linewidth=0.5))
+            else:
+                ax.add_patch(plt.Rectangle((j, i), 1, 1, fill=False, edgecolor='black', linewidth=0.5))
+
+    ax.set_xlim([0, len(diagram[0]) + 10])
+    ax.set_ylim([0, len(diagram) + 10])
+    ax.set_aspect('equal')
+
+    ax.set_xticks([])
+    ax.set_yticks([])
+
+    plt.show()
 
 def add_box(young_diagram):
     # Get the length of the current Young diagram
@@ -159,7 +274,8 @@ def final_young_diagram(n, t):
         final_diagram = [max(x, y) for x, y in zip(final_diagram, young_diagram)]
         box_counts = count_boxes(final_diagram, box_counts)
 
-    draw_young_diagram_gray_level(final_diagram, box_counts, n)
+    #draw_young_diagram_gray_level(final_diagram, box_counts, n)
+    draw_young_diagram_greens_level(final_diagram, box_counts, n)
     return final_diagram
 
 
