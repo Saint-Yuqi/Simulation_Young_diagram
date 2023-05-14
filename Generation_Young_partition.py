@@ -38,6 +38,45 @@ def draw_young_diagram(partition):
     plt.show()
 
 
+def draw_young_diagram_log_green_level(partition, box_counts={}, n=1, save_plot=False, filename=''):
+    diagram = [[0 for j in range(partition[i])] for i in range(len(partition))]
+    fig, ax = plt.subplots(figsize=(10, 10))
+
+    if box_counts:
+        max_freq = max(box_counts.values())
+        min_freq = min(box_counts.values())
+    else:
+        max_freq = 1
+        min_freq = 0
+
+    # Normalize the frequencies using the range of frequencies
+    normalized_box_counts = {key: (value - min_freq) / (max_freq - min_freq) for key, value in box_counts.items()}
+
+    # Use the modified 'Greens' colormap
+    cmap = cm.get_cmap('Greens')
+    colormap = colors.LinearSegmentedColormap.from_list("custom_colormap",
+                                                        [cmap(1), cmap(0.6), cmap(0.4), cmap(0)])
+
+    for i in range(len(diagram)):
+        for j in range(len(diagram[i])):
+            key = (j, i)
+            if key in normalized_box_counts:
+                freq = normalized_box_counts[key]
+                color = colormap(freq)
+                ax.add_patch(plt.Rectangle((j, i), 1, 1, fill=True, facecolor=color, edgecolor='black', linewidth=0.5))
+    ax.set_xlim([0, len(diagram[0]) + 10])
+    ax.set_ylim([0, len(diagram) + 10])
+    ax.set_aspect('equal')
+
+    ax.set_xticks([])
+    ax.set_yticks([])
+
+    if save_plot:
+        plt.savefig(filename)
+
+    plt.show()
+
+
 def draw_young_diagram_green_level(partition, box_counts={}, n=1):
     diagram = [[0 for j in range(partition[i])] for i in range(len(partition))]
     fig, ax = plt.subplots(figsize=(10, 10))
@@ -72,6 +111,45 @@ def draw_young_diagram_green_level(partition, box_counts={}, n=1):
     ax.set_yticks([])
 
     plt.show()
+
+
+def draw_young_diagram_light_green_level(partition, box_counts={}, n=1, save_plot=False, filename=''):
+    diagram = [[0 for j in range(partition[i])] for i in range(len(partition))]
+    fig, ax = plt.subplots(figsize=(10, 10))
+
+    if box_counts:
+        max_freq = max(box_counts.values())
+        min_freq = min(box_counts.values())
+    else:
+        max_freq = 1
+        min_freq = 0
+
+    # Normalize the frequencies using the range of frequencies
+    # Subtract the normalized frequency from 1 to reverse the colormap
+    normalized_box_counts = {key: 1 - (value - min_freq) / (max_freq - min_freq) for key, value in box_counts.items()}
+
+    cmap = cm.get_cmap('Greens')
+
+    for i in range(len(diagram)):
+        for j in range(len(diagram[i])):
+            key = (j, i)
+            if key in normalized_box_counts:
+                freq = normalized_box_counts[key]
+                color = cmap(freq)
+                ax.add_patch(plt.Rectangle((j, i), 1, 1, fill=True, facecolor=color, edgecolor='black', linewidth=0.5))
+
+    ax.set_xlim([0, len(diagram[0]) + 10])
+    ax.set_ylim([0, len(diagram) + 10])
+    ax.set_aspect('equal')
+
+    ax.set_xticks([])
+    ax.set_yticks([])
+
+    if save_plot:
+        plt.savefig(filename)
+
+    plt.show()
+
 
 
 def draw_young_diagram_gray_level(partition, box_counts={}, n=1):
@@ -294,13 +372,14 @@ def final_young_diagram(n, t):
 
         final_diagram = [max(x, y) for x, y in zip(final_diagram, young_diagram)]
         box_counts = count_boxes(final_diagram, box_counts)
-
-    draw_young_diagram_greens_level(final_diagram, box_counts, n)
-    #draw_young_diagram_gray_level(final_diagram, box_counts, n)
+    print(box_counts)
+    draw_young_diagram_light_green_level(final_diagram,box_counts, n)
+    # draw_young_diagram_light_green_level(final_diagram, box_counts, n)
+    # draw_young_diagram_gray_level(final_diagram, box_counts, n)
     return final_diagram
 
 
-n = 1000
+n = 100
 t = 100
 
 final_young_diagram(n, t)

@@ -113,22 +113,18 @@ def draw_young_diagram_light_green_level(partition, box_counts={}, n=1, save_plo
         min_freq = 0
 
     # Normalize the frequencies using the range of frequencies
-    normalized_box_counts = {key: (value - min_freq) / (max_freq - min_freq) for key, value in box_counts.items()}
+    # Subtract the normalized frequency from 1 to reverse the colormap
+    normalized_box_counts = {key: 1 - (value - min_freq) / (max_freq - min_freq) for key, value in box_counts.items()}
 
-    # Use the original 'Greens' colormap
     cmap = cm.get_cmap('Greens')
-    colormap = colors.LinearSegmentedColormap.from_list("custom_colormap",
-                                                        [cmap(0), cmap(0.4), cmap(0.6), cmap(1)])
 
     for i in range(len(diagram)):
         for j in range(len(diagram[i])):
             key = (j, i)
             if key in normalized_box_counts:
                 freq = normalized_box_counts[key]
-                color = colormap(freq)
+                color = cmap(freq)
                 ax.add_patch(plt.Rectangle((j, i), 1, 1, fill=True, facecolor=color, edgecolor='black', linewidth=0.5))
-            # else:
-            #     ax.add_patch(plt.Rectangle((j, i), 1, 1, fill=False, edgecolor='black', linewidth=0.5))
 
     ax.set_xlim([0, len(diagram[0]) + 10])
     ax.set_ylim([0, len(diagram) + 10])
