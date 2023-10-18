@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import matplotlib.cm as cm
+import numpy as np
+from scipy.optimize import curve_fit
 import random
 
 
@@ -133,6 +135,7 @@ def draw_young_diagram_light_green_level(partition, box_counts={}, n=1, save_plo
     ax.set_xticks([])
     ax.set_yticks([])
 
+
     if save_plot:
         plt.savefig(filename)
 
@@ -157,8 +160,9 @@ def draw_young_diagram_dark_green_level(partition, box_counts={}, n=1, save_plot
     # Create a custom colormap with 100 segments
     colormap = colors.LinearSegmentedColormap.from_list(
         "custom_colormap",
-        [cmap(i / 100) for i in range(101)]
+        [cmap(0.2)] + [cmap(i / 100) for i in range(20, 101)]
     )
+
 
     for i in range(len(diagram)):
         for j in range(len(diagram[i])):
@@ -278,14 +282,26 @@ def final_young_diagram(n, t):
 
         final_diagram = [max(x, y) for x, y in zip(final_diagram, young_diagram)]
         box_counts = count_boxes(final_diagram, box_counts)
-        print(box_counts)
-    draw_young_diagram_light_green_level(final_diagram, box_counts, n, save_plot=True, filename= '/Users/yang/PycharmProjects/Young_diagram/light_green_2.png')
-
+        #print(box_counts)
+    draw_young_diagram_light_green_level(final_diagram, box_counts, n, save_plot=True, filename= '/Users/yang/PycharmProjects/Young_diagram/light_green_1.png')
     #draw_young_diagram_gray_level(final_diagram, box_counts, n)
-    #draw_young_diagram_light_green_level(final_diagram, box_counts, n)
-    #draw_young_diagram_dark_green_level(final_diagram, box_counts, n, save_plot=True, filename= '/Users/yang/PycharmProjects/Young_diagram/3.png')
+    #draw_young_diagram_dark_green_level(final_diagram, box_counts, n, save_plot=True, filename= '/Users/yang/PycharmProjects/Young_diagram/dark_green_3.png')
 
     return final_diagram
+
+
+def draw_upper_bound_curve(young_diagram):
+    # Get the maximum value from the diagram
+    max_value = max(young_diagram)
+
+    # Create a list that starts at max_value and decreases as we move along the x-axis
+    upper_bound_curve = [max_value - i / len(young_diagram) for i in range(len(young_diagram))]
+
+    # Plot the curve
+    plt.plot(upper_bound_curve, color='red')
+    plt.title('Upper Bound Curve of Young Diagram')
+    plt.xlabel('Row index')
+    plt.ylabel('Row length')
 
 
 n = 1000
