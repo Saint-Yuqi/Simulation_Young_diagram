@@ -1,8 +1,5 @@
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
-import matplotlib.cm as cm
-import numpy as np
-from scipy.optimize import curve_fit
 import random
 
 
@@ -50,7 +47,6 @@ def build_deterministic_path(positions, n):
         if current_pos[1] + 1 < n and (current_pos[0], current_pos[1] + 1) in positions:
             neighbors.append((current_pos[0], current_pos[1] + 1))
 
-
         # Check top right neighbor if not in the most right column and the most bottom row
         if current_pos[0] + 1 < n and current_pos[1] + 1 < n and (current_pos[0] + 1, current_pos[1] + 1) in positions:
             neighbors.append((current_pos[0] + 1, current_pos[1] + 1))
@@ -66,6 +62,45 @@ def build_deterministic_path(positions, n):
     return path
 
 
+def record_boxes_and_endpoints(n, iterations):
+    all_boxes = {}  # To record all boxes that appear
+    endpoints = {}  # To record frequency of endpoints
+
+    for _ in range(iterations):
+        young_diagram, positions = generate_young_diagram(n)
+        path = build_deterministic_path(positions, n)
+        endpoint = path[-1]
+        endpoints[endpoint] = endpoints.get(endpoint, 0) + 1
+        for position in positions:
+            all_boxes[position] = True  # Simply mark the position as seen
+
+    return all_boxes, endpoints
+
+
+def draw_combined_young_diagram(all_boxes, endpoints, n):
+    fig, ax = plt.subplots()
+
+    max_val = max(endpoints.values(), default=0)
+    colormap = plt.get_cmap('Greens')
+    norm = colors.Normalize(0, max_val)
+
+    max_x = max([x for x, y in all_boxes.keys()], default=0)  # Maximum x-coordinate
+    max_y = max([y for x, y in all_boxes.keys()], default=0)  # Maximum y-coordinate
+
+    for (x, y), _ in all_boxes.items():
+        freq = endpoints.get((x, y), 0)  # Use 0 if the box wasn't an endpoint
+        color = 'white' if freq == 0 else colormap(norm(freq))
+        ax.add_patch(plt.Rectangle((x, y), 1, 1, fill=True, facecolor=color, edgecolor='black', linewidth=0.5))
+
+    ax.set_xlim([-0.5, max_x + 1.5])
+    ax.set_ylim([-0.5, max_y + 1.5])
+    ax.set_aspect('equal')
+
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.margins(0.05)  # Adding 5% margin around the graph
+    plt.show()
+
 
 def draw_young_diagram_with_path(partition, path, positions):
     # Create a plot with matplotlib
@@ -78,9 +113,10 @@ def draw_young_diagram_with_path(partition, path, positions):
     # Add rectangles for each box in the Young diagram
     for i in range(len(partition)):
         for j in range(partition[i]):
-            ax.add_patch(plt.Rectangle((j, i), 1, 1, fill=True, facecolor='lightgrey', edgecolor='black', linewidth=0.5))
-            #number = positions.index((j, i)) + 1  # Get the box number
-            #ax.text(j + 0.5, i + 0.5, str(number), ha='center', va='center', color='black', fontsize = fontsize)
+            ax.add_patch(
+                plt.Rectangle((j, i), 1, 1, fill=True, facecolor='lightgrey', edgecolor='black', linewidth=0.5))
+            # number = positions.index((j, i)) + 1  # Get the box number
+            # ax.text(j + 0.5, i + 0.5, str(number), ha='center', va='center', color='black', fontsize = fontsize)
 
     # Draw the deterministic path
     path_x = [p[0] + 0.5 for p in path]  # Adding 0.5 to center the path in the boxes
@@ -97,13 +133,8 @@ def draw_young_diagram_with_path(partition, path, positions):
     plt.show()
 
 
-n = 1000  # Number of boxes to add
+n = 100
+iterations = 1000
 
-# Generate Young diagram and track the positions of added boxes
-young_diagram1, positions1 = generate_young_diagram(n)
-
-# Build the deterministic path
-path1 = build_deterministic_path(positions1, n)
-
-# Visualize the Young diagram and deterministic path
-draw_young_diagram_with_path(young_diagram1, path1, positions1)
+all_boxes, endpoints = record_boxes_and_endpoints(n, iterations)
+draw_combined_young_diagram(all_boxes, endpoints, n)
