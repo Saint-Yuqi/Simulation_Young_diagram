@@ -7,4 +7,5 @@ My current project involves an in-depth examination of the stochastic characteri
 
 <img width="80" alt="n = 1000, iterations = 1000" src="https://github.com/Saint-Yuqi/Simulation_Young_diagram/assets/65489760/80b23eb4-2f7e-4a77-bbe8-d6ba854859bb">
 <img width="100" alt="n = 100, iterations = 1000" src="https://github.com/Saint-Yuqi/Simulation_Young_diagram/assets/65489760/65873ad8-4747-4b28-8d02-cd861075239b">
-<img width="100" alt="n = 100, iterations = 1000" src="https://github.com/Saint-Yuqi/Simulation_Young_diagram/assets/65489760/c2c5d294-ba75-4f07-94d6-0dce8d258d66">
+
+<img width="512" alt="n = 100, iterations = 1000" src="https://github.com/Saint-Yuqi/Simulation_Young_diagram/assets/65489760/67740fe8-8c29-4ba3-8b49-fe3ae4adb63e">
