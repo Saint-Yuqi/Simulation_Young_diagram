@@ -1,68 +1,68 @@
 import matplotlib.pyplot as plt
+import numpy as np
 import random
-from IPython.display import clear_output
-import time
+import matplotlib.transforms
 
 
-def add_box(young_diagram):
-    # Get the length of the current Young diagram
-    n = len(young_diagram)
-    # Store all the possibilities of the Young diagram
-    choices = []
-    # Add a box to an existing row in the Young diagram
-    for i in range(n):
-        if i == 0 or young_diagram[i - 1] > young_diagram[i]:
-            new_diagram = young_diagram.copy()
-            new_diagram[i] += 1
-            choices.append(new_diagram)
+def generate_young_diagram(N):
+    # Initialize the particles and diagram
+    particles = {i: 0 for i in range(-N + 1, 1)}  # Particles from -N+1 to 0
+    diagram = []
 
-    # Add a new row to the Young diagram
-    choices.append(young_diagram + [1])
+    for _ in range(N):
+        # Available moves are where the particle to the right is higher or non-existent
+        available_moves = [pos for pos in particles if pos + 1 not in particles or particles[pos + 1] > particles[pos]]
 
-    # Choose one of the possibilities uniformly at random
-    return random.choice(choices)
+        # If no available moves, break
+        if not available_moves:
+            break
+
+        # Move a random particle
+        move_from = random.choice(available_moves)
+        move_to = move_from + 1
+        particles[move_to] = particles[move_from] + 1  # Increase the height
+        diagram.append((move_to, particles[move_to]))  # Add new box position
+
+        # Remove the particle that moved
+        del particles[move_from]
+
+    return diagram
 
 
-def simulation_young_diagram(n, delay=0.1):
-    label = 1
-    young_diagram = [1]
+def draw_young_diagram(diagram, N):
     fig, ax = plt.subplots()
-    ax.add_patch(plt.Rectangle((0, 0), 1, 1, fill=False))
-    ax.text(0.5, 0.5, str(label), ha='center', va='center')
-    for _ in range(n - 1):
-        old_diagram = young_diagram.copy()
-        ax.set_xlim([0, n])
-        ax.set_ylim([0, n])
-        # Set the aspect ratio of the plot to be equal
-        ax.set_aspect('equal')
-        plt.show()
-        time.sleep(delay)
-        clear_output(wait=True)
-        young_diagram = add_box(young_diagram)
-        label += 1
-        if (len(young_diagram) - len(old_diagram) == 1):
-            ax.add_patch(plt.Rectangle((0, len(old_diagram)), 1, 1, fill=False))
-            ax.text(0.5, len(old_diagram) + 0.5, str(label), ha='center', va='center')
-            continue
 
-        for i in range(len(young_diagram)):
-            if (young_diagram[i] - old_diagram[i] == 1):
-                ax.add_patch(plt.Rectangle((old_diagram[i] , i), 1, 1, fill=False))
-                ax.text(old_diagram[i] + 0.5, i + 0.5, str(label), ha='center', va='center')
-                break
+    # Define transformation for rotation
+    t = plt.gca().transData
+    tr = matplotlib.transforms.Affine2D().rotate_deg_around(0, 0, 45)
 
-    # Set the x and y limits of the plot
-    ax.set_xlim([0, young_diagram[0] + 1])
-    ax.set_ylim([0, len(young_diagram) + 1])
-    # Set the aspect ratio of the plot to be equal
+    # Plot boxes
+    for x, y in diagram:
+        if y >= abs(x):  # Only plot boxes within the boundary
+            # Create a rectangle with the transformation
+            rect = plt.Rectangle((x - 0.5, y - 0.5), 1, 1, fill=True, edgecolor='black', transform=tr + t)
+            ax.add_patch(rect)
+
+    # Set plot limits
+    ax.set_xlim([-N, N])
+    ax.set_ylim([0, 2 * N])  # Extend the y-limit to accommodate the rotation
     ax.set_aspect('equal')
-    # Turn off axis labels
-    #ax.axis('off')
-    # Show the plot
+
+    # Draw boundary line y = |x|
+    boundary_x = np.linspace(-N, N, 1000)
+    boundary_y = abs(boundary_x)
+    ax.plot(boundary_x, boundary_y, color='red', linestyle='--')
+
+    # Apply rotation to the plot
+    plt.gca().set_transform(tr + t)
+
+    # Invert the y-axis to match the Young diagram orientation
+    plt.gca().invert_yaxis()
+
     plt.show()
 
 
-n = 10
-partition = [2,1,1,1]
-
-simulation_young_diagram(n,delay=0.1)
+# Number of steps (boxes to add)
+N = 10
+young_diagram = generate_young_diagram(N)
+draw_young_diagram(young_diagram, N)
