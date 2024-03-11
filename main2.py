@@ -105,11 +105,11 @@ def draw_combined_young_diagram(all_boxes, endpoints):
     plt.show()
 
 
-def draw_young_diagram_with_path(partition, path, positions):
+def draw_young_diagram_with_path(partition, path):
     # Create a plot with matplotlib
     fig, ax = plt.subplots(figsize=(10, 10))
 
-    max_dim = max(sum(partition), len(partition))  # Get the maximum dimension of the Young diagram
+    # max_dim = max(sum(partition), len(partition))  # Get the maximum dimension of the Young diagram
 
     # fontsize = max(6, int(15 * 20 / max_dim))  # Adjust the fontsize based on the size of the diagram
 
@@ -138,7 +138,7 @@ def draw_young_diagram_with_path(partition, path, positions):
 
 def draw_circle_and_sectors(ax, all_boxes):
     # Radius of the circle
-    r = max(x for (x, y) in all_boxes.keys()) + 4
+    r = max(x for (x, y) in all_boxes.keys()) + 10
     # The upper right corner
     ur_corner_x = max(x for (x, y) in all_boxes.keys())
     ur_corner_y = max(y for (x, y) in all_boxes.keys())
@@ -150,8 +150,8 @@ def draw_circle_and_sectors(ax, all_boxes):
     ax.add_artist(circle)
 
     # Calculate and draw the sectors (approximate with lines for visualization)
-    for i in tqdm(range(0, 5)):
-        angle = 2 * np.pi + (i / 5) * (np.pi / 2)  # Divide the quarter circle into 5 parts
+    for i in tqdm(range(0, 6)):
+        angle = 2 * np.pi + (i / 6) * (np.pi / 2)  # Divide the quarter circle into 6 parts
         x = circle_center[0] - r * np.cos(angle)
         y = circle_center[1] - r * np.sin(angle)
         ax.plot([circle_center[0], x], [circle_center[1], y], color='blue')
@@ -176,20 +176,21 @@ def draw_combined_young_diagram_with_circle(all_boxes, endpoints):
     draw_circle_and_sectors(ax, all_boxes)
 
     # Set the limits based on the Young diagram dimensions
-    ax.set_xlim([-0.5, max_x + 1.5])
-    ax.set_ylim([-0.5, max_y + 1.5])
+    ax.set_xlim([-10, max_x + 2])
+    ax.set_ylim([-10, max_y + 2])
     ax.set_aspect('equal')
 
     ax.set_xticks([])
     ax.set_yticks([])
+    plt.legend()
     plt.show()
 
 
-def count_endpoints_in_sectors(n, iterations,k):
-    sector_counts = [0] * 5
-    sector_angle = (np.pi / 2) / 5  # Each sector angle in the bottom-left quarter circle
-    all_boxes, endpoints = record_boxes_and_endpoints(n, iterations)
-    r = max(x for (x, y) in all_boxes1.keys()) + k
+def count_endpoints_in_sectors(all_boxes, endpoints, k):
+    sector_counts = [0] * 6
+    sector_angle = (np.pi / 2) / 6  # Each sector angle in the bottom-left quarter circle
+    # all_boxes, endpoints = record_boxes_and_endpoints(n, iterations)
+    r = max(x for (x, y) in all_boxes.keys()) + k
     # The upper right corner
     ur_corner_x = max(x for (x, y) in all_boxes.keys())
     ur_corner_y = max(y for (x, y) in all_boxes.keys())
@@ -199,7 +200,7 @@ def count_endpoints_in_sectors(n, iterations,k):
     for endpoint, count in endpoints.items():
         dx = endpoint[0] - circle_center[0]
         dy = endpoint[1] - circle_center[1]
-        distance = np.sqrt(dx**2 + dy**2)
+        distance = np.sqrt(dx ** 2 + dy ** 2)
 
         # Ensure the endpoint is within the circle
         if distance <= r:
@@ -218,6 +219,54 @@ def count_endpoints_in_sectors(n, iterations,k):
     return sector_counts
 
 
+def plot_curve(ax):
+    curve_limit = 9
+    x_values = np.linspace(0, curve_limit ** 2, 500)
+    y_values = [(curve_limit - np.sqrt(x)) ** 2 if np.sqrt(x) <= curve_limit ** 2 else np.nan for x in x_values]
+    ax.plot(x_values, y_values, color='red', label=f'Curve: sqrt(x) + sqrt(y) = {curve_limit}')
+
+
+def plot_sectors(ax, reference_point, num_sectors):
+    sector_angle = 2 * np.pi / num_sectors
+    for i in range(num_sectors):
+        angle = i * sector_angle
+        dx = np.cos(angle) * 20  # Length of the line (arbitrary)
+        dy = np.sin(angle) * 20
+        ax.plot([reference_point[0], reference_point[0] + dx],
+                [reference_point[1], reference_point[1] + dy], color='blue')
+
+
+def draw_combined_young_diagram_with_curve(all_boxes, endpoints):
+    fig, ax = plt.subplots()
+
+    max_val = max(endpoints.values(), default=1)
+    colormap = plt.get_cmap('Greens')
+    norm = colors.Normalize(0, max_val)
+    max_x = max([x for x, y in all_boxes.keys()], default=0)  # Maximum x-coordinate
+    max_y = max([y for x, y in all_boxes.keys()], default=0)  # Maximum y-coordinate
+
+    # Drawing the boxes of the Young diagram
+    for (x, y), _ in tqdm(all_boxes.items()):
+        freq = endpoints.get((x, y), 0)
+        color = 'white' if freq == 0 else colormap(norm(freq))
+        ax.add_patch(plt.Rectangle((x, y), 1, 1, fill=True, facecolor=color, edgecolor='black', linewidth=0.5))
+
+    plot_curve(ax)
+    # Plot the reference point and sectors
+    curve_limit = 9
+    reference_point = (curve_limit ** 2, curve_limit ** 2)
+    plot_sectors(ax, reference_point, 5)
+    ax.scatter(*reference_point, color='green', label='Reference Point')
+
+    # Set the limits based on the Young diagram dimensions
+    ax.set_xlim([-10, max_x + 2])
+    ax.set_ylim([-10, max_y + 2])
+    ax.set_aspect('equal')
+
+    ax.set_xticks([])
+    ax.set_yticks([])
+    plt.legend()
+    plt.show()
 
 
 def test_uniform_distribution(sector_counts):
@@ -225,32 +274,66 @@ def test_uniform_distribution(sector_counts):
     return chi_square, p_value
 
 
+def count_endpoints_relative_to_curve(endpoints):
+    curve_limit = 9
+    reference_point = (curve_limit ** 2, curve_limit ** 2)
+    num_sectors = 5  # Number of sectors to divide the angle range into
+    sector_angle = 2 * np.pi / num_sectors
+    sector_counts = [0] * num_sectors
+
+    for endpoint, count in endpoints.items():
+        x, y = endpoint
+        if np.sqrt(x) + np.sqrt(y) <= curve_limit:
+            dx = x - reference_point[0]
+            dy = y - reference_point[1]
+            angle = np.arctan2(dy, dx)
+            if angle < 0:
+                angle += 2 * np.pi
+
+            # Determine which sector the angle falls into
+            sector_index = int(angle // sector_angle) % num_sectors
+            sector_counts[sector_index] += count
+
+    return sector_counts
+
+
 n2 = 100
 iterations2 = 100
-
-# Record the boxes and endpoints
 all_boxes1, endpoints1 = record_boxes_and_endpoints(n2, iterations2)
-# Assuming endpoints is a dictionary with endpoints as keys
+# Assuming endpoints is a dictionary with endpoints as keys and their frequencies as values
+sector_counts1 = count_endpoints_relative_to_curve(endpoints1)
+# draw_combined_young_diagram_with_circle(all_boxes1, endpoints1)
+draw_combined_young_diagram_with_curve(all_boxes1, endpoints1)
+print("Endpoints in each sector:", sector_counts1)
 
+# Perform statistical test for uniform distribution
+chi_square_statistic, p_value = chisquare(sector_counts1)
 
-for k in range(0, 10):
-    sector_counts = count_endpoints_in_sectors(n2, iterations2,k)
-    print("Endpoints in each sector:", sector_counts)
-    # Perform the chi-squared test
-    chi_square_statistic, p_value = test_uniform_distribution(sector_counts)
+print(f"Chi-squared Statistic: {chi_square_statistic}, P-value: {p_value}")
 
-    print(f"Chi-squared Statistic: {chi_square_statistic}, P-value: {p_value}")
-
-    # If the p-value is less than 0.05, we reject the null hypothesis of uniform distribution
-    if p_value < 0.05:
-        print("The distribution of endpoints among the sectors is not uniform.")
-    else:
-        print("The distribution of endpoints among the sectors is uniform.")
+# n2 = 1000
+# iterations2 = 1000
+#
+# for it in range(1, 10):
+#     # Record the boxes and endpoints
+#     all_boxes1, endpoints1 = record_boxes_and_endpoints(n2, iterations2)
+#     # Assuming endpoints is a dictionary with endpoints as keys
+#     for kt in range(1, 20):
+#         sector_counts = count_endpoints_in_sectors(all_boxes1, endpoints1, k)
+#         print("Endpoints in each sector:", sector_counts)
+#         # Perform the chi-squared test
+#         chi_square_statistic, p_value = test_uniform_distribution(sector_counts)
+#
+#         print(f"Chi-squared Statistic: {chi_square_statistic}, P-value: {p_value}")
+#
+#         # If the p-value is less than 0.05, we reject the null hypothesis of uniform distribution
+#         if p_value < 0.01:
+#             print("The distribution of endpoints among the sectors is not uniform.")
+#         else:
+#             print("The distribution of endpoints among the sectors is uniform.")
 
 # Draw the combined diagram with the circle and sectors
 # draw_combined_young_diagram_with_circle(all_boxes1, endpoints1)
-
-
 
 # n1 = 100
 # iterations1 = 100
@@ -259,4 +342,3 @@ for k in range(0, 10):
 # # draw_young_diagram_with_path(partition1, path1, positions1)
 # all_boxes1, endpoints1 = record_boxes_and_endpoints(n1, iterations1)
 # draw_combined_young_diagram(all_boxes1, endpoints1)
-#

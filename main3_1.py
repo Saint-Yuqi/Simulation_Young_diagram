@@ -3,6 +3,14 @@ from matplotlib import patches
 import random
 from tqdm import tqdm
 import math
+import numpy as np
+from scipy.stats import pearsonr
+from sklearn.linear_model import LinearRegression
+from scipy import stats
+from numpy.polynomial.polynomial import Polynomial
+from pygam import LinearGAM, s
+from sklearn.svm import SVR
+from sklearn.ensemble import RandomForestRegressor
 
 
 def add_box(young_diagram):
@@ -96,7 +104,8 @@ def draw_young_diagram_with_paths(ax, partition, path, positions, title, second_
             start = second_path[i]
             end = second_path[i + 1]
             arrow = patches.FancyArrowPatch((start[0] + 0.5, start[1] + 0.5), (end[0] + 0.5, end[1] + 0.5),
-                                            arrowstyle='->', mutation_scale=arrow_scale, color='blue', linewidth=linewidth)
+                                            arrowstyle='->', mutation_scale=arrow_scale, color='blue',
+                                            linewidth=linewidth)
             ax.add_patch(arrow)
 
     ax.set_xlim([-0.5, max(partition) + 0.5])
@@ -235,38 +244,168 @@ def calculate_u_values_and_store_data(num_iterations, n):
             'original_positions': position1,
             'modified_diagram': partition2,
             'modified_path': path2,
-            'modified_positions': position2a
+            'modified_positions': position2
         })
 
     return iteration_data
 
 
-num_iterations = 10  # Define the number of iterations
+num_iterations = 1000  # Define the number of iterations
 
-n = 10000  # Size of the Young diagram
-# Calculate u values and store data for each iteration
+n = 1000  # Size of the Young diagram
+
+# # Calculate u values and store data for each iteration
 iteration_data = calculate_u_values_and_store_data(num_iterations, n)
-epsilon = 0.1
-# Filter iterations where u values are close
-close_iterations = [data for data in iteration_data if abs(data['u_values'][0] - data['u_values'][1]) <= epsilon]
+# u_values = calculate_u_values_over_iterations(num_iterations, n)
+# close_count = count_close_u_values(u_values, epsilon=0.1)
+# print(
+#     f"Number of u_values close to the line u1 = u2: {close_count}, and the probability of u_values close to the u1 = u2: {close_count / num_iterations}")
+# # Plot the u values
+# plot_u_values(u_values, n, num_iterations)
+# # Extract u values for Pearson's correlation test
+u1_values = np.array([data['u_values'][0] for data in iteration_data])
+u2_values = np.array([data['u_values'][1] for data in iteration_data])
+# # Generate random sample data for demonstration purposes
+# # Replace these with your actual data for u1 and u2
+# np.random.seed(0)
+# sample_u1 = np.random.normal(0, 1, 1000)  # Example data for u1
+# sample_u2 = np.random.normal(0, 1, 1000)  # Example data for u2
+#
+# # Calculate the empirical cumulative distribution functions
+# ecdf_u1 = stats.cumfreq(sample_u1, numbins=100)
+# ecdf_u2 = stats.cumfreq(sample_u2, numbins=100)
+#
+# x_u1 = ecdf_u1.lowerlimit + np.linspace(0, ecdf_u1.binsize * ecdf_u1.cumcount.size, ecdf_u1.cumcount.size)
+# x_u2 = ecdf_u2.lowerlimit + np.linspace(0, ecdf_u2.binsize * ecdf_u2.cumcount.size, ecdf_u2.cumcount.size)
+#
+# # Plotting the ECDFs
+# plt.figure(figsize=(12, 6))
+#
+# plt.subplot(1, 2, 1)
+# plt.plot(x_u1, ecdf_u1.cumcount / max(ecdf_u1.cumcount))
+# plt.title('Empirical Cumulative Distribution Function of $u_1$')
+# plt.xlabel('$u_1$')
+# plt.ylabel('ECDF')
+#
+# plt.subplot(1, 2, 2)
+# plt.plot(x_u2, ecdf_u2.cumcount / max(ecdf_u2.cumcount))
+# plt.title('Empirical Cumulative Distribution Function of $u_2$')
+# plt.xlabel('$u_2$')
+# plt.ylabel('ECDF')
+#
+# plt.tight_layout()
+# plt.show()
 
-# Get the u values for multiple iterations
-u_values = calculate_u_values_over_iterations(num_iterations, n)
-close_count = count_close_u_values(u_values, epsilon=0.1)
-print(f"Number of u_values close to the line u1 = u2: {close_count}, and the probability of u_values close to the u1 = u2: {close_count / num_iterations}")
-# Plot the u values
-plot_u_values(u_values, n, num_iterations)
-# Draw diagrams for close iterations
-for data in close_iterations:
-    # Create a single plot
-    fig, ax = plt.subplots(figsize=(10, 6))
+# # Check lengths and contents of the arrays
+# print("Length of u1_values:", len(u1_values))
+# print("Length of u2_values:", len(u2_values))
+# print("u1_values:", u1_values)
+# print("u2_values:", u2_values)
+#
+# # Perform Pearson's correlation test only if both arrays have at least 2 data points
+# if len(u1_values) >= 2 and len(u2_values) >= 2:
+#     corr_coefficient, p_value = pearsonr(u1_values, u2_values)
+#     # Interpret the results
+#     alpha = 0.05
+#     if p_value < alpha:
+#         print("Reject the null hypothesis. There is a significant relationship.")
+#     else:
+#         print("Do not reject the null hypothesis. No significant relationship found.")
+# else:
+#     print("Not enough data for Pearson's correlation test.")
 
-    # Draw the original diagram with the original and modified path
-    draw_young_diagram_with_paths(ax, data['original_diagram'], data['original_path'],
-                                         data['original_positions'], "Diagram with Both Paths",
-                                         second_path=data['modified_path'])
+# Assuming u1_values and u2_values are your data
+# X = np.array(u1_values).reshape(-1, 1)  # Predictor
+# y = np.array(u2_values)  # Response
+# model = LinearRegression().fit(X, y)
+# slope = model.coef_[0]
+# intercept = model.intercept_
+# print("Model equation: u2 = {:.2f} * u1 + {:.2f}".format(slope, intercept))
+# plt.scatter(X, y, color='blue')
+# plt.plot(X, model.predict(X), color='red')
+# plt.title('Linear Regression: u2 vs u1')
+# plt.xlabel('u1')
+# plt.ylabel('u2')
+# plt.show()
 
-    plt.suptitle(f"Combined Diagram for u1 = {data['u_values'][0]}, u2 = {data['u_values'][1]}")
-    plt.show()
+# Choose the degree of the polynomial (e.g., 2 for quadratic)
+# degree = 2
+#
+# # Fit the polynomial regression model
+# coefs = np.polyfit(u1_values, u2_values, degree)
+# poly = Polynomial(coefs)
+#
+# # Generate a range of values for u1 for plotting
+# u1_fit = np.linspace(min(u1_values), max(u1_values), 100)
+# u2_fit = poly(u1_fit)
+#
+# # Plot the original data and the fitted polynomial curve
+# plt.scatter(u1_values, u2_values, label='Original Data')
+# plt.plot(u1_fit, u2_fit, color='red', label=f'{degree}-degree Polynomial Fit')
+# plt.xlabel('u1')
+# plt.ylabel('u2')
+# plt.legend()
+# plt.show()
 
 
+# # Create a GAM with a spline term for u1
+# gam = LinearGAM(s(0)).fit(u1_values, u2_values)
+#
+# # Generate a sequence of u1 values for plotting
+# u1_seq = np.linspace(u1_values.min(), u1_values.max(), 100)
+#
+# # Predict u2 values using the GAM model
+# u2_pred = gam.predict(u1_seq)
+#
+# # Plot the original data and the predicted smooth curve
+# plt.scatter(u1_values, u2_values, color='grey', alpha=0.6, label='Data')
+# plt.plot(u1_seq, u2_pred, color='red', label='GAM Smooth')
+# plt.xlabel('u1')
+# plt.ylabel('u2')
+# plt.title('GAM Fit to u1 and u2')
+# plt.legend()
+# plt.show()
+#
+# # Reshape data for model
+# u1_values_reshaped = u1_values.reshape(-1, 1)
+#
+# # Create Random Forest Regression model
+# rf_model = RandomForestRegressor(n_estimators=100, random_state=42)
+#
+# # Fit model to the data
+# rf_model.fit(u1_values_reshaped, u2_values)
+#
+# # Generate predictions
+# u1_seq = np.linspace(u1_values.min(), u1_values.max(), 100).reshape(-1, 1)
+# u2_pred = rf_model.predict(u1_seq)
+#
+# # Plot the original data and the predictions
+# plt.scatter(u1_values, u2_values, color='grey', alpha=0.6, label='Data')
+# plt.plot(u1_seq.ravel(), u2_pred, color='green', label='Random Forest Predictions')
+# plt.xlabel('u1')
+# plt.ylabel('u2')
+# plt.title('Random Forest Regression on u1 and u2')
+# plt.legend()
+# plt.show()
+
+# Reshape data for model
+u1_values_reshaped = u1_values.reshape(-1, 1)
+
+# Create SVR model
+svr_model = SVR(kernel='poly', degree=3)
+
+# Fit model to the data
+svr_model.fit(u1_values_reshaped, u2_values)
+
+# Generate predictions
+u1_seq = np.linspace(u1_values.min(), u1_values.max(), 100).reshape(-1, 1)
+u2_pred = svr_model.predict(u1_seq)
+
+# Plot the original data and the predictions
+plt.scatter(u1_values, u2_values, color='grey', alpha=0.6, label='Data')
+plt.plot(u1_seq.ravel(), u2_pred, color='blue', label='SVR Predictions')
+plt.xlabel('u1')
+plt.ylabel('u2')
+plt.title('Support Vector Regression on u1 and u2')
+plt.legend()
+plt.show()

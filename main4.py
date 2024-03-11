@@ -185,12 +185,21 @@ def plot_u_values(u_values, n, num_iterations):
     plt.show()
 
 
+def count_close_u_values(u_values, epsilon=0.1):
+    close_count = 0
+    for u1, u2 in u_values:
+        if abs(u1 - u2) <= epsilon:
+            close_count += 1
+    return close_count
+
+
 num_iterations = 1000  # Define the number of iterations
 
-n = 1000  # Size of the Young diagram
+n = 100000  # Size of the Young diagram
 
 # Get the u values for multiple iterations
 u_values = calculate_u_values_over_iterations(num_iterations, n)
-
-# Plot the u values
+close_count = count_close_u_values(u_values, epsilon=0.1)
+print(f"Number of u_values close to the line u1 = u2: {close_count}, and the probability of u_values close to the u1 = u2: {close_count / num_iterations}")
+# Plot the u v   alues
 plot_u_values(u_values, n, num_iterations)

@@ -307,4 +307,3 @@ def draw_upper_bound_curve(young_diagram):
 n = 1000
 t = 100
 final_young_diagram(n, t)
-
